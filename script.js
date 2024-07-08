@@ -1,32 +1,67 @@
-document.getElementById('addTaskBtn').addEventListener('click', addTask);
 
-function addTask() {
-    var taskInput = document.getElementById('taskInput');
-    var taskList = document.getElementById('taskList');
+document.addEventListener('DOMContentLoaded', function() {
+    const taskInput = document.getElementById('new-task');
+    const addTaskBtn = document.getElementById('add-task-btn');
+    const tasksList = document.getElementById('tasks');
+    const aiCommentary = document.getElementById('ai-commentary');
 
-    if (taskInput.value.trim() !== '') {
-        var li = document.createElement('li');
-        li.textContent = taskInput.value;
+    addTaskBtn.addEventListener('click', addTask);
+    taskInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            addTask();
+        }
+    });
 
-        var completeBtn = document.createElement('button');
-        completeBtn.textContent = 'Complete';
-        completeBtn.addEventListener('click', function() {
-            li.classList.toggle('completed');
-        });
+    function addTask() {
+        const taskText = taskInput.value.trim();
+        if (taskText) {
+            const taskItem = document.createElement('li');
+            const taskSpan = document.createElement('span');
+            taskSpan.textContent = taskText;
+            taskItem.appendChild(taskSpan);
 
-        var deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.addEventListener('click', function() {
-            taskList.removeChild(li);
-        });
+            const completeBtn = document.createElement('button');
+            completeBtn.textContent = 'Complete';
+            completeBtn.addEventListener('click', () => {
+                taskSpan.style.textDecoration = 'line-through';
+            });
+            taskItem.appendChild(completeBtn);
 
-        var actions = document.createElement('div');
-        actions.className = 'task-actions';
-        actions.appendChild(completeBtn);
-        actions.appendChild(deleteBtn);
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.addEventListener('click', () => {
+                tasksList.removeChild(taskItem);
+            });
+            taskItem.appendChild(deleteBtn);
 
-        li.appendChild(actions);
-        taskList.appendChild(li);
-        taskInput.value = '';
+            tasksList.appendChild(taskItem);
+            taskInput.value = '';
+            makeAIFunComment(taskText);
+        }
     }
-}
+
+    async function makeAIFunComment(taskText) {
+        try {
+            console.log('Making API request...');
+            const response = await axios.post('https://api.openai.com/v1/chat/completions', {
+                model: "gpt-4o",
+                messages: [
+                    { role: "system", content: "You are a helpful assistant." },
+                    { role: "user", content: `Make a humorous and slightly mocking comment about the following task: "${taskText}". Be brief and sarcastic.` }
+                ]
+            }, {
+                headers: {
+                    'Authorization': `Bearer YOUR_OPENAI_API_KEY`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            console.log('API response:', response);
+            const aiComment = response.data.choices[0].message.content;
+            aiCommentary.textContent = `AI Commentary: ${aiComment}`;
+        } catch (error) {
+            console.error('Error making API request:', error);
+            aiCommentary.textContent = 'AI Commentary: Unable to fetch comment.';
+        }
+    }
+});

@@ -1,3 +1,6 @@
+(This repo is part of Beluga's demo
+check it out: https://x.com/BelugaIDE/status/1810357989997686882)
+
 
 # Todo App with AI Commentary
 
